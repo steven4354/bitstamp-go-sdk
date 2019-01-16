@@ -44,10 +44,10 @@ func handleEvent(e *bitstamp.Event, Ws *bitstamp.WebSocket) {
 func main() {
 
 	// setup bitstamp api
-	bitstamp.SetAuth("123456", "key", "secret")
+	b := bitstamp.NewClient("123456", "key", "secret")
 
 	// get balance
-	balances, err := bitstamp.AccountBalance()
+	balances, err := b.AccountBalance()
 	if err != nil {
 		fmt.Printf("Can't get balance using bitstamp API: %s\n", err)
 		return
@@ -59,46 +59,12 @@ func main() {
 
 	// attempt to place a buy order
 	// BuyLimitOrder(pair string, amount float64, price float64, amountPrecision, pricePrecision int)
-	order, err := bitstamp.BuyLimitOrder("btcusd", 0.5, 600.00, 16, 16)
+	order, err := b.BuyLimitOrder("btcusd", 0.5, 600.00, 16, 16)
 	if err != nil {
 		log.Printf("Error placing buy order: %s", err)
 		return
 	}
 	fmt.Printf("Place oder %d", order.Id)
-
-	var Ws *bitstamp.WebSocket
-	// websocket read loop
-	for {
-		// connect
-		log.Println("Dialing...")
-		var err error
-		Ws, err = bitstamp.NewWebSocket(WS_TIMEOUT)
-		if err != nil {
-			log.Printf("Error connecting: %s", err)
-			time.Sleep(1 * time.Second)
-			continue
-		}
-		Ws.Subscribe("live_trades")
-
-		// read data
-	L:
-		for {
-			select {
-			case ev := <-Ws.Stream:
-				handleEvent(ev, Ws)
-
-			case err := <-Ws.Errors:
-				log.Printf("Socket error: %s, reconnecting...", err)
-				Ws.Close()
-				break L
-
-			case <-time.After(10 * time.Second):
-				Ws.Ping()
-
-			}
-		}
-	}
-
 }
 ```
 

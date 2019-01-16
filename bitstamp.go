@@ -21,6 +21,12 @@ var _cliId, _key, _secret string
 
 var _url string = "https://www.bitstamp.net/api/v2"
 
+type BitstampClient struct {
+	ClientId string
+	ApiKey string
+	ApiSecret string
+}
+
 type ErrorResult struct {
 	Status string `json:"status,string"`
 	Reason string `json:"reason,string"`
@@ -118,22 +124,21 @@ type OpenOrder struct {
 	CurrencyPair string  `json:"currency_pair"`
 }
 
-func SetUrl(url string) {
+func NewClient(clientId, key, secret string) (b *BitstampClient) {
+	return &BitstampClient{clientId, key, secret}
+}
+
+// mostly not used
+func (b *BitstampClient) SetUrl(url string) {
 	_url = url
 }
 
-func SetAuth(clientId, key, secret string) {
-	_cliId = clientId
-	_key = key
-	_secret = secret
-}
-
-func SetDebug(debug bool) {
-	_debug = debug
-}
+// func SetDebug(debug bool) {
+// 	_debug = debug
+// }
 
 // privateQuery submits an http.Request with key, sig & nonce
-func privateQuery(path string, values url.Values, v interface{}) error {
+func (b *BitstampClient) privateQuery(path string, values url.Values, v interface{}) error {
 	// parse the bitstamp URL
 	endpoint, err := url.Parse(_url)
 	if err != nil {
@@ -145,9 +150,9 @@ func privateQuery(path string, values url.Values, v interface{}) error {
 
 	// add required key, signature & nonce to values
 	nonce := strconv.FormatInt(time.Now().UnixNano(), 10)
-	mac := hmac.New(sha256.New, []byte(_secret))
-	mac.Write([]byte(nonce + _cliId + _key))
-	values.Set("key", _key)
+	mac := hmac.New(sha256.New, []byte(b.ApiSecret))
+	mac.Write([]byte(nonce + b.ClientId + b.ApiKey))
+	values.Set("key", b.ApiKey)
 	values.Set("signature", strings.ToUpper(hex.EncodeToString(mac.Sum(nil))))
 	values.Set("nonce", nonce)
 
@@ -226,27 +231,27 @@ func (o *OrderBookItem) UnmarshalJSON(data []byte) error {
 	return nil
 }
 
-func AccountBalance() (*AccountBalanceResult, error) {
+func (b *BitstampClient) AccountBalance() (*AccountBalanceResult, error) {
 	balance := &AccountBalanceResult{}
-	err := privateQuery("/balance/", url.Values{}, balance)
+	err := b.privateQuery("/balance/", url.Values{}, balance)
 	if err != nil {
 		return nil, err
 	}
 	return balance, nil
 }
 
-func OrderBook(pair string) (*OrderBookResult, error) {
+func (b *BitstampClient) OrderBook(pair string) (*OrderBookResult, error) {
 	orderBook := &OrderBookResult{}
-	err := privateQuery("/order_book/"+pair+"/", url.Values{}, orderBook)
+	err := b.privateQuery("/order_book/"+pair+"/", url.Values{}, orderBook)
 	if err != nil {
 		return nil, err
 	}
 	return orderBook, nil
 }
 
-func Ticker(pair string) (*TickerResult, error) {
+func (b *BitstampClient) Ticker(pair string) (*TickerResult, error) {
 	ticker := &TickerResult{}
-	err := privateQuery("/ticker/"+pair+"/", url.Values{}, ticker)
+	err := b.privateQuery("/ticker/"+pair+"/", url.Values{}, ticker)
 	if err != nil {
 		return nil, err
 	}

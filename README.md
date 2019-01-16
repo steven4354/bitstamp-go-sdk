@@ -14,7 +14,7 @@ import (
 	"log"
 	"time"
 
-	"github.com/ajph/bitstamp-go"
+	"github.com/steven4354/bitstamp-go"
 )
 
 const WS_TIMEOUT = 10 * time.Second

@@ -258,7 +258,7 @@ func (b *BitstampClient) Ticker(pair string) (*TickerResult, error) {
 	return ticker, nil
 }
 
-func BuyLimitOrder(pair string, amount float64, price float64, amountPrecision, pricePrecision int) (*BuyOrderResult, error) {
+func (b *BitstampClient) BuyLimitOrder(pair string, amount float64, price float64, amountPrecision, pricePrecision int) (*BuyOrderResult, error) {
 	// set params
 	var v = url.Values{}
 	v.Add("amount", strconv.FormatFloat(amount, 'f', amountPrecision, 64))
@@ -266,28 +266,28 @@ func BuyLimitOrder(pair string, amount float64, price float64, amountPrecision, 
 
 	// make request
 	result := &BuyOrderResult{}
-	err := privateQuery("/buy/"+pair+"/", v, result)
+	err := b.privateQuery("/buy/"+pair+"/", v, result)
 	if err != nil {
 		return nil, err
 	}
 	return result, nil
 }
 
-func BuyMarketOrder(pair string, amount float64) (*BuyOrderResult, error) {
+func (b *BitstampClient) BuyMarketOrder(pair string, amount float64) (*BuyOrderResult, error) {
 	// set params
 	var v = url.Values{}
 	v.Add("amount", strconv.FormatFloat(amount, 'f', 8, 64))
 
 	// make request
 	result := &BuyOrderResult{}
-	err := privateQuery("/buy/market/"+pair+"/", v, result)
+	err := b.privateQuery("/buy/market/"+pair+"/", v, result)
 	if err != nil {
 		return nil, err
 	}
 	return result, nil
 }
 
-func SellLimitOrder(pair string, amount float64, price float64, amountPrecision, pricePrecision int) (*SellOrderResult, error) {
+func (b *BitstampClient) SellLimitOrder(pair string, amount float64, price float64, amountPrecision, pricePrecision int) (*SellOrderResult, error) {
 	// set params
 	var v = url.Values{}
 	v.Add("amount", strconv.FormatFloat(amount, 'f', amountPrecision, 64))
@@ -295,54 +295,54 @@ func SellLimitOrder(pair string, amount float64, price float64, amountPrecision,
 
 	// make request
 	result := &SellOrderResult{}
-	err := privateQuery("/sell/"+pair+"/", v, result)
+	err := b.privateQuery("/sell/"+pair+"/", v, result)
 	if err != nil {
 		return nil, err
 	}
 	return result, nil
 }
 
-func SellMarketOrder(pair string, amount float64) (*SellOrderResult, error) {
+func (b *BitstampClient) SellMarketOrder(pair string, amount float64) (*SellOrderResult, error) {
 	// set params
 	var v = url.Values{}
 	v.Add("amount", strconv.FormatFloat(amount, 'f', 8, 64))
 
 	// make request
 	result := &SellOrderResult{}
-	err := privateQuery("/sell/market/"+pair+"/", v, result)
+	err := b.privateQuery("/sell/market/"+pair+"/", v, result)
 	if err != nil {
 		return nil, err
 	}
 	return result, nil
 }
 
-func CancelOrder(orderId int64) {
+func (b *BitstampClient) CancelOrder(orderId int64) {
 	// set params
 	var v = url.Values{}
 	v.Add("id", strconv.FormatInt(orderId, 10))
 
 	// make request
-	privateQuery("/cancel_order/", v, nil)
+	b.privateQuery("/cancel_order/", v, nil)
 }
 
-func OpenOrders() (*[]OpenOrder, error) {
+func (b *BitstampClient) OpenOrders() (*[]OpenOrder, error) {
 	// make request
 	result := &[]OpenOrder{}
-	err := privateQuery("/open_orders/all/", url.Values{}, result)
+	err := b.privateQuery("/open_orders/all/", url.Values{}, result)
 	if err != nil {
 		return nil, err
 	}
 	return result, nil
 }
 
-func OrderStatus(orderId int64) (*OrderStatusResult, error) {
+func (b *BitstampClient) OrderStatus(orderId int64) (*OrderStatusResult, error) {
 	// set params
 	var v = url.Values{}
 	v.Add("id", strconv.FormatInt(orderId, 10))
 
 	// make request
 	result := &OrderStatusResult{}
-	err := privateQuery("/order_status/", v, result)
+	err := b.privateQuery("/order_status/", v, result)
 	if err != nil {
 		return nil, err
 	}

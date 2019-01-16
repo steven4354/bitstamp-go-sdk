@@ -17,7 +17,7 @@ import (
 
 var _debug bool = false
 
-var _cliId, _key, _secret string
+// var _cliId, _key, _secret string
 
 var _url string = "https://www.bitstamp.net/api/v2"
 

@@ -17,30 +17,6 @@ import (
 	"github.com/steven4354/bitstamp-go"
 )
 
-const WS_TIMEOUT = 10 * time.Second
-
-func handleEvent(e *bitstamp.Event, Ws *bitstamp.WebSocket) {
-	switch e.Event {
-	// pusher stuff
-	case "pusher:connection_established":
-		log.Println("Connected")
-	case "pusher_internal:subscription_succeeded":
-		log.Println("Subscribed")
-	case "pusher:pong":
-		// ignore
-	case "pusher:ping":
-		Ws.Pong()
-
-	// bitstamp
-	case "trade":
-		fmt.Printf("%#v\n", e.Data)
-
-	// other
-	default:
-		log.Printf("Unknown event: %#v\n", e)
-	}
-}
-
 func main() {
 
 	// setup bitstamp api
@@ -67,8 +43,3 @@ func main() {
 	fmt.Printf("Place oder %d", order.Id)
 }
 ```
-
-Todo
-----
-- Documentation
-- Tests

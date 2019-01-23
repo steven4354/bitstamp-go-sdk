@@ -316,13 +316,18 @@ func (b *BitstampClient) SellMarketOrder(pair string, amount float64) (*SellOrde
 	return result, nil
 }
 
-func (b *BitstampClient) CancelOrder(orderId int64) {
+func (b *BitstampClient) CancelOrder(orderId int64) error {
 	// set params
 	var v = url.Values{}
 	v.Add("id", strconv.FormatInt(orderId, 10))
 
 	// make request
-	b.privateQuery("/cancel_order/", v, nil)
+	err := b.privateQuery("/cancel_order/", v, nil)
+
+	if err != nil {
+		return err
+	}
+	return nil
 }
 
 func (b *BitstampClient) OpenOrders() (*[]OpenOrder, error) {

@@ -231,11 +231,11 @@ func (b *BitstampClient) publicQuery(path string, values url.Values, v interface
 
 	// TODO: remove
 	// encode the url.Values in the body
-	// reqBody := strings.NewReader(values.Encode())
+	reqBody := strings.NewReader(values.Encode())
 
 	// create the request
 	// log.Println(endpoint.String(), values)
-	req, err := http.NewRequest("GET", endpoint.String())
+	req, err := http.NewRequest("GET", endpoint.String(), reqBody)
 	if err != nil {
 		return err
 	}

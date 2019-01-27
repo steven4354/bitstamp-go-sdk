@@ -209,6 +209,80 @@ func (b *BitstampClient) privateQuery(path string, values url.Values, v interfac
 	return json.Unmarshal(body, v)
 }
 
+// publicQuery submits a GET request to a public endpoint
+func (b *BitstampClient) publicQuery(path string, values url.Values, v interface{}) error {
+	// parse the bitstamp URL
+	endpoint, err := url.Parse(_url)
+	if err != nil {
+		return err
+	}
+
+	// set the endpoint for this request
+	endpoint.Path += path
+
+	// TODO: remove
+	// add required key, signature & nonce to values
+	//nonce := strconv.FormatInt(time.Now().UnixNano(), 10)
+	//mac := hmac.New(sha256.New, []byte(b.ApiSecret))
+	//mac.Write([]byte(nonce + b.ClientId + b.ApiKey))
+	//values.Set("key", b.ApiKey)
+	//values.Set("signature", strings.ToUpper(hex.EncodeToString(mac.Sum(nil))))
+	//values.Set("nonce", nonce)
+
+	// TODO: remove
+	// encode the url.Values in the body
+	// reqBody := strings.NewReader(values.Encode())
+
+	// create the request
+	// log.Println(endpoint.String(), values)
+	req, err := http.NewRequest("GET", endpoint.String())
+	if err != nil {
+		return err
+	}
+	req.Header.Add("Content-Type", "application/x-www-form-urlencoded")
+
+	// submit the http request
+	r, err := http.DefaultClient.Do(req)
+	if err != nil {
+		return err
+	}
+
+	// if no result interface, return
+	if v == nil {
+		return nil
+	}
+
+	// read the body of the http message into a byte array
+	body, err := ioutil.ReadAll(r.Body)
+	defer r.Body.Close()
+	if err != nil {
+		return err
+	}
+
+	// is this an error?
+	if len(body) == 0 {
+		return fmt.Errorf("Response body 0 length")
+	}
+	e := make(map[string]interface{})
+	err = json.Unmarshal(body, &e)
+	if bsEr, ok := e["error"]; ok {
+		return fmt.Errorf("%v", bsEr)
+	}
+
+	// Check for status == error
+	err_result := ErrorResult{}
+	json.Unmarshal(body, &err_result)
+	if err_result.Status == "error" {
+		return fmt.Errorf("%#v", err_result)
+	}
+
+	if _debug {
+		log.Println(string(body))
+	}
+	//parse the JSON response into the response object
+	return json.Unmarshal(body, v)
+}
+
 // UnmarshalJSON takes a json array and converts it into an OrderBookItem.
 func (o *OrderBookItem) UnmarshalJSON(data []byte) error {
 	tmp_struct := struct {
@@ -242,7 +316,7 @@ func (b *BitstampClient) AccountBalance() (*AccountBalanceResult, error) {
 
 func (b *BitstampClient) OrderBook(pair string) (*OrderBookResult, error) {
 	orderBook := &OrderBookResult{}
-	err := b.privateQuery("/order_book/"+pair+"/", url.Values{}, orderBook)
+	err := b.publicQuery("/order_book/"+pair+"/", url.Values{}, orderBook)
 	if err != nil {
 		return nil, err
 	}

@@ -21,6 +21,10 @@ var _debug bool = false
 
 var _url string = "https://www.bitstamp.net/api/v2"
 
+var (
+	counter = int64(1)
+)
+
 type BitstampClient struct {
 	ClientId string
 	ApiKey string
@@ -149,10 +153,12 @@ func (b *BitstampClient) privateQuery(path string, values url.Values, v interfac
 	endpoint.Path += path
 
 	// add required key, signature & nonce to values
-	nonce := strconv.FormatInt(time.Now().UnixNano(), 10)
+	counter += 1;
+	nonce := strconv.FormatInt(time.Now().UnixNano() + counter, 10)
 	mac := hmac.New(sha256.New, []byte(b.ApiSecret))
 	mac.Write([]byte(nonce + b.ClientId + b.ApiKey))
 	values.Set("key", b.ApiKey)
+	//values.Set("api_key", b.ApiKey)
 	values.Set("signature", strings.ToUpper(hex.EncodeToString(mac.Sum(nil))))
 	values.Set("nonce", nonce)
 
@@ -196,15 +202,28 @@ func (b *BitstampClient) privateQuery(path string, values url.Values, v interfac
 	}
 
 	// Check for status == error
-	err_result := ErrorResult{}
-	json.Unmarshal(body, &err_result)
-	if err_result.Status == "error" {
-		return fmt.Errorf("%#v", err_result)
+
+	// TODO: remove (doesn't work - replacec with new error handling)
+	//err_result := ErrorResult{}
+	//json.Unmarshal(body, &err_result)
+
+	var errResult map[string]interface{}
+	err = json.Unmarshal(body, &errResult)
+
+	//log.Println("STEVEMSG - errResult %v", errResult)
+
+	if err == nil {
+		if status, ok := errResult["status"]; ok && status == "error" {
+			return fmt.Errorf("%+v", errResult)
+		}
 	}
 
 	if _debug {
 		log.Println(string(body))
 	}
+
+	//log.Println("STEVEMSG - string(body) %v", string(body))
+
 	//parse the JSON response into the response object
 	return json.Unmarshal(body, v)
 }

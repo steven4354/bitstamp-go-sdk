@@ -29,6 +29,7 @@ type BitstampClient struct {
 	ClientId string
 	ApiKey string
 	ApiSecret string
+	HttpClient *http.Client
 }
 
 type ErrorResult struct {
@@ -129,7 +130,14 @@ type OpenOrder struct {
 }
 
 func NewClient(clientId, key, secret string) (b *BitstampClient) {
-	return &BitstampClient{clientId, key, secret}
+	var timeoutHttpClient = &http.Client{
+		Transport: &http.Transport{
+			MaxIdleConnsPerHost: 10,
+		},
+		Timeout: time.Second * 3,
+	}
+
+	return &BitstampClient{clientId, key, secret, timeoutHttpClient}
 }
 
 // mostly not used
@@ -174,7 +182,7 @@ func (b *BitstampClient) privateQuery(path string, values url.Values, v interfac
 	req.Header.Add("Content-Type", "application/x-www-form-urlencoded")
 
 	// submit the http request
-	r, err := http.DefaultClient.Do(req)
+	r, err := b.HttpClient.Do(req)
 	if err != nil {
 		return err
 	}
